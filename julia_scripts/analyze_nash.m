@@ -1,0 +1,40 @@
+% Loading and analyze the data from homotopy solver
+A = load("nash_state_dataXX.csv");
+H1 = load("nash_payoff_h1XX.csv");
+H2 = load("nash_payoff_h2XX.csv");
+
+set(groot, 'defaultAxesFontSize', 17);
+set(groot, 'defaultTextFontSize', 17);
+set(groot, 'defaultAxesTickLabelInterpreter', 'latex');
+set(groot, 'defaultTextInterpreter', 'latex');
+set(groot, 'defaultLegendInterpreter', 'latex');
+
+
+%% Use stereographic projection
+
+
+B = zeros(size(A));
+B(:, end) = [];
+
+for i = 1:size(B, 2)
+    B(:, i) = 2*A(:, i+1)./(1-A(:, 1));
+end
+figure()
+scatter3(B(:, 1), B(:, 2), B(:, 3), 'filled', 'o')
+xlabel('$x_1$', Interpreter='latex');
+ylabel('$x_2$', Interpreter='latex');
+zlabel('$x_3$', Interpreter='latex');
+zlim([-5,5])
+
+%% another visualization: the hyperoctant picture
+C = abs(A);
+D = zeros(size(B));
+for i = 1:size(D, 2)
+    D(:, i) = 2*C(:, i+1)./(1-C(:, 1));
+end
+figure()
+scatter3(D(:, 1), D(:, 2), D(:, 3))
+zlim
+
+C = repmat(sign(A(:, 1)), [1, 4]) .* A;
+sgnC = sign(C)
