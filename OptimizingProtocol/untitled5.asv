@@ -1,0 +1,23 @@
+classdef qg
+    % Quantum game data
+    properties
+        summary
+        N % number of players
+        
+
+    end
+
+    methods
+        function obj = qg(inputArg1,inputArg2)
+            %UNTITLED5 Construct an instance of this class
+            %   Detailed explanation goes here
+            obj.summary = inputArg1 + inputArg2;
+        end
+
+        function outputArg = method1(obj,inputArg)
+            %METHOD1 Summary of this method goes here
+            %   Detailed explanation goes here
+            outputArg = obj.summary + inputArg;
+        end
+    end
+end

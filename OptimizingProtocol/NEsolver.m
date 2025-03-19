@@ -1,0 +1,78 @@
+function [phi,fval,phis,fvals,aopts,T] = NEsolver(phi0,f0,df0,ftol,displayoption,flgComplex)
+    % Solve for a Nash state by iterations
+    % phi0 - initial state
+    % f0 - (function handle) the sum-of-square problem
+    % df0 - (function handle) the gradient of sum-of-square problem, computed using finite
+    % difference of some input scale h.
+    % ftol: tolerence to treat function output as 0
+    % displayoption
+
+    % Set flgComplex = 1 to search over the complex wavefunctions
+    if nargin < 6
+        flgComplex = 0;
+    end
+
+
+    phi = phi0/norm(phi0); % normalize input state
+    fval = f0(phi);
+    % aopt - optimal distance along the steepest descent direction
+    aopt = 0.033;
+    % iter - iteration numbers
+    iter = 1;
+    max_iter = 100;
+    
+    h = sqrt(2.2e-16); % the finite difference used for finding derivatives
+    
+    fvals = zeros(1,max_iter); % the sum-of-square value at each iteration
+    aopts = zeros(1,max_iter); % the optimal descent distance at each iteration
+    % In the convergent limit, both the above quantities will tend to 0
+    phis = zeros(length(phi0),max_iter); % also store the states at each step
+    
+    % the initial conditions
+    fvals(1) = fval;
+    aopts(1) = aopt;
+    phis(:,1) = phi;
+    if and(iter==1,displayoption==1)
+        disp(['iter = 1, fval = ',num2str(fval),', aopt = ',num2str(aopt)])
+    end
+    while and(fval>ftol,iter<max_iter)
+
+        % parameters and options for the fminbnd function
+        tol = min(1e-4,1e-3*aopt);
+        options = optimset('TolX',tol);       
+        % choose the descent direction to be the gradient
+        nn = -df0(phi,h)/norm(df0(phi,h));        
+        % choose the amount of descent, i.e. stepsize e
+        % by exact line search
+
+        % update 06Dec 2023 - add functionality to search for complex
+        % wavefunctions
+        if flgComplex == 0
+            ftemp = @(ak) f0(phi+ak*nn);
+            % use builtin opt package to minimize ftemp
+            [aopt,fval] = fminbnd(ftemp,0,2*aopt,options);
+            phi = phi + aopt*nn;
+            phi = phi/norm(phi); % normalize the resultant state
+        else
+            % meaning input flgComplex = 1
+            ftemp = @(ak) f0(phi+ak*(nn(1:length(phi)) + 1i*nn(length(phi)+1:end)));
+            [aopt,fval] = fminbnd(ftemp,0,3*aopt,options);
+            phi = phi + aopt*(nn(1:length(phi)) + 1i*nn(length(phi)+1:end));
+            phi = phi/norm(phi); % normalize the resultant state
+        end
+        
+        iter = iter + 1;
+        
+        if displayoption == 1
+            disp(['iter = ',num2str(iter),', fval = ',num2str(fval),', aopt = ',num2str(aopt)]);
+        end
+        fvals(iter) = fval;
+        aopts(iter) = aopt;
+        phis(:,iter) = phi;
+    end
+
+    fvals = fvals(1:iter);
+    aopts = aopts(1:iter);
+    phis = phis(:,1:iter);
+    T = iter;
+end
